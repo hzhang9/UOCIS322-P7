@@ -1,3 +1,15 @@
-Flask==1.1.2
+Flask
 flask-restful==0.3.8
 pymongo
+wtforms==2.3.3
+Flask-Login==0.4.1
+Flask-WTF==0.14.2
+click==6.7
+Flask-HTTPAuth==3.2.3
+Flask-SQLAlchemy==2.2
+itsdangerous==0.24
+Jinja2==2.9.6
+MarkupSafe==1.1.1
+passlib==1.7.1
+SQLAlchemy==1.1.11
+Werkzeug==0.12.2
