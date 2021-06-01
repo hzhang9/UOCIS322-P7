@@ -1,3 +1,4 @@
+import flask
 from flask import Flask,request,redirect, url_for, flash, abort
 from flask_restful import Resource, Api
 import pymongo
@@ -11,19 +12,25 @@ from itsdangerous import (TimedJSONWebSignatureSerializer \
                           as Serializer, BadSignature, \
                           SignatureExpired)
 import time
+from urllib.parse import urlparse,urljoin
 
 app = Flask(__name__)
 api = Api(app)
+login_manager= LoginManager()
+login_manager.init_app(app)
+login_manager.login_view="login"
 client= MongoClient('mongodb://'+os.environ['MONGODB_HOSTNAME'],27017)
 db=client.tododb
-app.config['SECRET_KEY']='Default secret'
+users=db.usersdb
+app.secret_key='Default secret'
 
-def generate_token(expiration=600):
-    s=Serializer(app,config['SECRET_KEY'],expires_in=expiration)
-    return None
+def generate_token(uid,expiration=600):
+    s=Serializer(app.secret_key,expires_in=expiration)
+    token=s.dumps({'id':uid})
+    return {'token':token,'duration':expiration}
 
 def verify_token(token):
-    s= Serializer()
+    s= Serializer(app.secret_key)
     try:
         data= s.loads(token)
     except SignatureExpired:
@@ -37,6 +44,11 @@ def hash_password(password):
 
 def verify_password(password, hashVal):
     return pwd_context.verify(password, hashVal)
+
+def is_safe_url(target):
+    ref_url=urlparse(request.host_url)
+    test_url=urlparse(urljoin(request.host_url,target))
+    return test_url.scheme in ('http','https') and ref_url.netloc == test_url.netloc
 
 class RegisterForm(Form):
     username= StringField('Username',[
@@ -59,15 +71,13 @@ class User(UserMixin):
     def __init__(self, uid):
         self.id = uid
 
-    def get_id(self):
-        return self.id
-
-login_manager= LoginManager()
-login_manager.init_app(app)
-
 @login_manager.user_loader
 def load_user(user_id):
-    return None
+    user=usersdb.user.find_one(user_id)
+    if user=='' or user==None:
+        return None
+    else:
+        return User(user)
 
 @app.route('/')
 @app.route('/index')
@@ -76,21 +86,15 @@ def index():
 
 @app.route('/register',methods=['GET','POST'])
 def register():
-    form = registerForm()
-    username=request.form.get('username')
-    password=request.form.get('password')
-
-    return flask.render_template('login.html',form=form)
+    form = RegisterForm()
+    return None
 
 @app.route('/login',methods=['GET','POST'])
 def login():
     form = LoginForm()
-    username=request.form.get('username')
-    password=request.form.get('password')
+    return None
 
-    return flask.render_template('login.html',form=form)
-
-@app.route('logout')
+@app.route('/logout')
 @login_required
 def logout():
     logout_user()
@@ -99,17 +103,16 @@ def logout():
 
 @app.route('/token')
 def token():
-    return None
+   return None 
 
 @app.errorhandler(400)
 def error_400(e):
-    return render_template('400.html'),400
+    return flask.render_template('400.html'),400
 
 @app.errorhandler(401)
 def error_401(e):
-    return render_template('401.html'),401
+    return flask.render_template('401.html'),401
 
-'''-----------------------------------------------------------------------'''
 class listAJ(Resource):
     def get(self):
         top=request.args.get("top")#get top variable(get fail will became None)

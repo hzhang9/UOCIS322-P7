@@ -1,8 +1,8 @@
-Flask
+Flask==0.12.2
 flask-restful==0.3.8
 pymongo
-wtforms==2.3.3
 Flask-Login==0.4.1
+wtforms==2.3.3
 Flask-WTF==0.15.1
 click==6.7
 Flask-HTTPAuth==3.2.3
@@ -13,3 +13,4 @@ MarkupSafe==1.1.1
 passlib==1.7.1
 SQLAlchemy==1.1.11
 Werkzeug==0.12.2
+
