@@ -1,8 +1,5 @@
-FROM python:3
-RUN apt-get update -y
-RUN apt-get install -y python-pip python-dev build-essential
-COPY . /app
-WORKDIR /app
+FROM python:3.8
+LABEL maintainer="noemail@website.domain"
+COPY . /todo
+WORKDIR /todo
 RUN pip install -r requirements.txt
-RUN python token.py
-RUN python password.py

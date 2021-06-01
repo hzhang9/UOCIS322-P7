@@ -3,7 +3,7 @@ flask-restful==0.3.8
 pymongo
 wtforms==2.3.3
 Flask-Login==0.4.1
-Flask-WTF==0.14.2
+Flask-WTF==0.15.1
 click==6.7
 Flask-HTTPAuth==3.2.3
 Flask-SQLAlchemy==2.2
