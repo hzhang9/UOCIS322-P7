@@ -1,5 +1,5 @@
 import flask
-from flask import Flask,request,redirect, url_for, flash, abort
+from flask import Flask,request,redirect, url_for, flash, abort, session
 from flask_restful import Resource, Api
 import pymongo
 from pymongo import MongoClient
@@ -13,6 +13,7 @@ from itsdangerous import (TimedJSONWebSignatureSerializer \
                           SignatureExpired)
 import time
 from urllib.parse import urlparse,urljoin
+import random
 
 app = Flask(__name__)
 api = Api(app)
@@ -53,18 +54,19 @@ def is_safe_url(target):
 class RegisterForm(Form):
     username= StringField('Username',[
         validators.Length(min=2,max=25,message=u"Little too short for a username."),
-        validators.InputRequired(u"Forget something?")])
+        validators.InputRequired(u"Must input username")])
     password= StringField('Password',[
-        validators.Length(min=2,max=25,message=u"Little too short for a username."),
-        validators.InputRequired(u"Forget something?")])
+        validators.Length(min=2,max=25,message=u"Little too short for a password."),
+        validators.InputRequired(u"Must input password")])
+
 
 class LoginForm(Form):
     username= StringField('Username',[
         validators.Length(min=2,max=25,message=u"Little too short for a username."),
-        validators.InputRequired(u"Forget something?")])
+        validators.InputRequired(u"Must input username")])
     password= StringField('Password',[
-        validators.Length(min=2,max=25,message=u"Little too short for a username."),
-        validators.InputRequired(u"Forget something?")])
+        validators.Length(min=2,max=25,message=u"Little too short for a password."),
+        validators.InputRequired(u"Must input password")])
     remember= BooleanField('Remember me')
 
 class User(UserMixin):
@@ -73,7 +75,7 @@ class User(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_id):
-    user=usersdb.user.find_one(user_id)
+    user=users.find_one(user_id)
     if user=='' or user==None:
         return None
     else:
@@ -86,32 +88,57 @@ def index():
 
 @app.route('/register',methods=['GET','POST'])
 def register():
-    form = RegisterForm()
-    return None
+    form= RegisterForm()
+    if form.validate_on_submit():
+        username=form.username.data
+        password=form.password.data
+        udata=users.find_one({"username":username})
+        uid=random.randint(1,9999999)
+        if udata!=None:
+            message="Already exist given username"
+            return flask.render_template('400_r.html',message=message),400
+        hashp=hash_password(password)
+        user={'id':uid,'username':username,'password':hashp}
+        users.insert_one(user)
+        return flask.render_template('register_suc.html',data=user),201
+    return flask.render_template('register.html',form=form)
 
 @app.route('/login',methods=['GET','POST'])
 def login():
     form = LoginForm()
-    return None
+    if form.validate_on_submit():
+        username=form.username.data
+        password= form.password.data
+        remember=form.remember.data
+        udata=users.find_one({"username":username})
+        if udata==None:
+            message="Username doesn't exist"
+            return flask.render_template('400_l.html',message=message),400
+        hashp=udata['password']
+        if verify_password(password,hashp)==False:
+            message="Password wrong"
+            return flask.render_template('400_l.html',message=message),400
+        uid=udata['id']
+        class_u=User(uid)
+        if login_user(class_u,remember):
+            session['id']=uid
+            user={'id':uid,'username':username,'password':hashp,'remember':remember}
+            return flask.render_template('login_suc.html',data=user)
+            #next=request.args.get("next")
+            #if not is_safe_url(next):
+            #    message="Next isn't safe URL"  
+            #    return flask.render_template('400_l.html',message=message),400
+            #return redirect(next or url_for('login'))
+    return flask.render_template('login.html',form=form)
 
-@app.route('/logout')
-@login_required
+@app.route('/logout/',methods=['POST'])
 def logout():
     logout_user()
-    flash("Logged out.")
-    return redirect(url_for("index"))
+    return flask.render_template('logout_suc.html')
 
 @app.route('/token')
 def token():
-   return None 
-
-@app.errorhandler(400)
-def error_400(e):
-    return flask.render_template('400.html'),400
-
-@app.errorhandler(401)
-def error_401(e):
-    return flask.render_template('401.html'),401
+    return None
 
 class listAJ(Resource):
     def get(self):

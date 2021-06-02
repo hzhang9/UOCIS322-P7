@@ -1,5 +1,19 @@
+<!doctype html>
 <html>
-<body>
-<p>Register successfully!</p>
+  <head>
+    <title>Register interface</title>
+  </head>
+  <body>
+    <p>Enter username and password into below space and submit to register</p>
+    <form action="/register" method="POST">
+      {{form.csrf_token}}
+      {{form.hidden_tag()}}
+      <div>{{form.username.label}}
+	   {{form.username()}}</div>
+      <div>{{form.password.label}}
+	   {{form.password()}}</div>
+      <div><input type="submit" value="Register"></div>
+    </form>
+  </body>
 </body>
 </html>
