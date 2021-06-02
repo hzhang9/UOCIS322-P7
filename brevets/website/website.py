@@ -1,8 +1,9 @@
 import flask
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session
 import requests
 import os
 import logging
+
 
 ADDR= os.environ['BACKEND_ADDR']#respti
 PORT= os.environ['BACKEND_PORT']#port
@@ -16,6 +17,11 @@ def index():
 
 @app.route('/listAJ',methods=['POST'])
 def listAJ():
+    uid=session['id']
+    if uid.id==None:
+        return "Not yet login",400
+    else:
+         login_user(uid,remember=False)
     top=request.form['top']#get top from input
     if top==None or top.isdigit()==False:
     #doesn't find top, or top invalid, just display all
@@ -39,6 +45,7 @@ def listAJ():
         #update c_c
             c_c+=1
     result=result.replace('\n','<br/>')#for \n can be see as line break
+    logout_user()
     return result #result now is json format string, return
 
 @app.route('/listOJ',methods=['POST'] )

@@ -122,6 +122,7 @@ def login():
         uid=udata['id']
         class_u=User(uid)
         if login_user(class_u,remember):
+            session['id']=class_u
             tokenInfo=generate_token(uid,600)
             t=tokenInfo['token'].decode('utf-8')
             session['token']=t
