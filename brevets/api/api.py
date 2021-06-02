@@ -100,6 +100,7 @@ def register():
         hashp=hash_password(password)
         user={'id':uid,'username':username,'password':hashp}
         users.insert_one(user)
+        session['token']=None
         return flask.render_template('register_suc.html',data=user),201
     return flask.render_template('register.html',form=form)
 
@@ -121,27 +122,28 @@ def login():
         uid=udata['id']
         class_u=User(uid)
         if login_user(class_u,remember):
-            session['id']=uid
+            tokenInfo=generate_token(uid,600)
+            t=tokenInfo['token'].decode('utf-8')
+            session['token']=t
             user={'id':uid,'username':username,'password':hashp,'remember':remember}
             return flask.render_template('login_suc.html',data=user)
-            #next=request.args.get("next")
-            #if not is_safe_url(next):
-            #    message="Next isn't safe URL"  
-            #    return flask.render_template('400_l.html',message=message),400
-            #return redirect(next or url_for('login'))
     return flask.render_template('login.html',form=form)
 
-@app.route('/logout/',methods=['POST'])
+@app.route('/logout/', methods=['POST'])
 def logout():
+    session['token']=None
     logout_user()
     return flask.render_template('logout_suc.html')
 
-@app.route('/token')
-def token():
-    return None
-
 class listAJ(Resource):
     def get(self):
+        token=session['token']
+        if token==None:
+            message="Token doesn't exist."
+            return message,401
+        if verify_token(token)==None:
+            message="Token verify fail."
+            return message,401
         top=request.args.get("top")#get top variable(get fail will became None)
         result=[]
         items=list(db.tododb.find())#take data in mongo to be list
@@ -155,10 +157,18 @@ class listAJ(Resource):
             for i in range(int(top)):
                 result.append({'miles':items[i]['miles'],'km':items[i]['km'],'location':items[i]['location'],'open':items[i]['open'],'close':items[i]['close']})
             return result
+        
 
 class listOJ(Resource):
     #almost same with listAJ, but don't shows close times
     def get(self):
+        token=session['token']
+        if token==None:
+            message="Token doesn't exist."
+            return message,401
+        if verify_token(token)==None:
+            message="Token verify fail."
+            return message,401        
         top=request.args.get("top")
         result=[]
         items=list(db.tododb.find())
@@ -174,6 +184,13 @@ class listOJ(Resource):
 class listCJ(Resource):
     #almost same with listAJ, but doesn't shows open times
     def get(self):
+        token=session['token']
+        if token==None:
+            message="Token doesn't exist."
+            return message,401
+        if verify_token(token)==None:
+            message="Token verify fail."
+            return message,401
         top=request.args.get("top")
         result=[]
         items=list(db.tododb.find())
@@ -189,6 +206,13 @@ class listCJ(Resource):
 class listAC(Resource):
     def get(self):
         #except change format to be csv, others almost same with listAJ
+        token=session['token']
+        if token==None:
+            message="Token doesn't exist."
+            return message,401
+        if verify_token(token)==None:
+            message="Token verify fail."
+            return message,401
         top=request.args.get("top")
         result=[]
         items=list(db.tododb.find())
@@ -208,6 +232,13 @@ class listAC(Resource):
 class listOC(Resource):
     #almost same with listAC, but doesn't shows close times
     def get(self):
+        token=session['token']
+        if token==None:
+            message="Token doesn't exist."
+            return message,401
+        if verify_token(token)==None:
+            message="Token verify fail."
+            return message,401
         top=request.args.get("top")
         result=[]
         items=list(db.tododb.find())
@@ -228,6 +259,13 @@ class listOC(Resource):
 class listCC(Resource):
     #almost same with listAC, but doesn't shows open times
     def get(self):
+        token=session['token']
+        if token==None:
+            message="Token doesn't exist."
+            return message,401
+        if verify_token(token)==None:
+            message="Token verify fail."
+            return message,401
         top=request.args.get("top")
         result=[]
         items=list(db.tododb.find())
