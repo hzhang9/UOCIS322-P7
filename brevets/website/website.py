@@ -19,19 +19,15 @@ ADDR= os.environ['BACKEND_ADDR']#respti
 PORT= os.environ['BACKEND_PORT']#port
 app = Flask(__name__)
 
+
+
 @app.route('/')
 @app.route('/index')
 def index():
     return flask.render_template('index.html')
 
-
 @app.route('/listAJ',methods=['POST'])
 def listAJ():
-    uid=session['id']
-    if uid.id==None:
-        return "Not yet login",400
-    else:
-         login_user(uid,remember=False)
     top=request.form['top']#get top from input
     if top==None or top.isdigit()==False:
     #doesn't find top, or top invalid, just display all

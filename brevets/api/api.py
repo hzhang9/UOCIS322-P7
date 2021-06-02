@@ -122,15 +122,15 @@ def login():
         uid=udata['id']
         class_u=User(uid)
         if login_user(class_u,remember):
-            session['id']=class_u
-            tokenInfo=generate_token(uid,600)
-            t=tokenInfo['token'].decode('utf-8')
+            session['id']=uid
+            token=generate_token(uid,600)
+            t=token['token'].decode('utf-8')
             session['token']=t
             user={'id':uid,'username':username,'password':hashp,'remember':remember}
             return flask.render_template('login_suc.html',data=user)
     return flask.render_template('login.html',form=form)
 
-@app.route('/logout/', methods=['POST'])
+@app.route('/logout', methods=['POST'])
 def logout():
     session['token']=None
     logout_user()
