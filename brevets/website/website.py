@@ -3,6 +3,16 @@ from flask import Flask, render_template, request, session
 import requests
 import os
 import logging
+from flask_login import (LoginManager, current_user, login_required, login_user, logout_user, UserMixin, confirm_login, fresh_login_required)
+from flask_wtf import FlaskForm as Form
+from wtforms import BooleanField, StringField, validators
+from passlib.apps import custom_app_context as pwd_context
+from itsdangerous import (TimedJSONWebSignatureSerializer \
+                          as Serializer, BadSignature, \
+                          SignatureExpired)
+import time
+from urllib.parse import urlparse,urljoin
+import random
 
 
 ADDR= os.environ['BACKEND_ADDR']#respti
