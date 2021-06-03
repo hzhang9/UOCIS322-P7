@@ -123,17 +123,23 @@ def login():
         uid=udata['id']
         class_u=User(uid)
         if login_user(class_u,remember):
-            session['id']=uid
-            token=generate_token(uid,600)
+            session['id']=current_user.id
+            token=generate_token(uid)
             t=token['token'].decode('utf-8')
             session['token']=t
-            user={'id':uid,'username':username,'password':hashp,'remember':remember}
-            return flask.render_template('login_suc.html',data=user)
+            django.contrib.auth.login(request,user)
+            #user={'id':uid,'username':username,'password':hashp,'remember':remember}
+            #return flask.render_template('login_suc.html',data=user)
+            next=request.args.get('next')
+            if not is_safe_url(next):
+                message="Next doesn't safe"
+                return flask.render_template('400_l.html',message=message),400
+            return redirect(next or url_for('index'))
     return flask.render_template('login.html',form=form)
 
 @app.route('/api/logout')
+@login_required
 def logout():
-    session['token']=None
     logout_user()
     return flask.render_template('logout_suc.html')
 
