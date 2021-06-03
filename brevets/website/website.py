@@ -3,6 +3,8 @@ from flask import Flask, render_template, request, session
 import requests
 import os
 import logging
+import pymongo
+from pymongo import MongoClient
 from flask_login import (LoginManager, current_user, login_required, login_user, logout_user, UserMixin, confirm_login, fresh_login_required)
 from flask_wtf import FlaskForm as Form
 from wtforms import BooleanField, StringField, validators
@@ -18,8 +20,9 @@ import random
 ADDR= os.environ['BACKEND_ADDR']#respti
 PORT= os.environ['BACKEND_PORT']#port
 app = Flask(__name__)
-
-
+#client=MongoClient('mongodb://'+os.environ['MONGODB_HOSTNAME'],27017)
+#users=client.usersdb
+#test=users.usersdb.find_one({'username':'hzhang9'})
 
 @app.route('/')
 @app.route('/index')
@@ -28,6 +31,10 @@ def index():
 
 @app.route('/listAJ',methods=['POST'])
 def listAJ():
+    #if test!=None:
+    #    return str(test['id'])
+    #else:
+    #    return 'Fail!'
     top=request.form['top']#get top from input
     if top==None or top.isdigit()==False:
     #doesn't find top, or top invalid, just display all

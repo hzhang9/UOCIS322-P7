@@ -22,7 +22,8 @@ login_manager.init_app(app)
 login_manager.login_view="login"
 client= MongoClient('mongodb://'+os.environ['MONGODB_HOSTNAME'],27017)
 db=client.tododb
-users=db.usersdb
+users=client.usersdb
+
 app.secret_key='Default secret'
 
 def generate_token(uid,expiration=600):
@@ -75,7 +76,7 @@ class User(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_id):
-    user=users.find_one(user_id)
+    user=users.usersdb.find_one(user_id)
     if user=='' or user==None:
         return None
     else:
@@ -86,32 +87,32 @@ def load_user(user_id):
 def index():
     return flask.render_template('index.html')
 
-@app.route('/register',methods=['GET','POST'])
+@app.route('/api/register',methods=['GET','POST'])
 def register():
     form= RegisterForm()
     if form.validate_on_submit():
         username=form.username.data
         password=form.password.data
-        udata=users.find_one({"username":username})
+        udata=users.usersdb.find_one({"username":username})
         uid=random.randint(1,9999999)
         if udata!=None:
             message="Already exist given username"
             return flask.render_template('400_r.html',message=message),400
         hashp=hash_password(password)
         user={'id':uid,'username':username,'password':hashp}
-        users.insert_one(user)
+        users.usersdb.insert_one(user)
         session['token']=None
         return flask.render_template('register_suc.html',data=user),201
     return flask.render_template('register.html',form=form)
 
-@app.route('/login',methods=['GET','POST'])
+@app.route('/api/login',methods=['GET','POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
         username=form.username.data
         password= form.password.data
         remember=form.remember.data
-        udata=users.find_one({"username":username})
+        udata=users.usersdb.find_one({"username":username})
         if udata==None:
             message="Username doesn't exist"
             return flask.render_template('400_l.html',message=message),400
@@ -130,7 +131,7 @@ def login():
             return flask.render_template('login_suc.html',data=user)
     return flask.render_template('login.html',form=form)
 
-@app.route('/logout', methods=['POST'])
+@app.route('/api/logout')
 def logout():
     session['token']=None
     logout_user()
