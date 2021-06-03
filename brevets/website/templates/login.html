@@ -5,7 +5,7 @@
   </head>
   <body>
     <p>Enter username and password into below space and submit to login</p>
-    <form action="/api/login" method="POST">
+    <form action="/login" method="POST">
       {{form.csrf_token}}
       {{form.hidden_tag()}}
       <div>{{form.username.label}}

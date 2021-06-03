@@ -27,20 +27,11 @@ client= MongoClient('mongodb://'+os.environ['MONGODB_HOSTNAME'],27017)
 users=client.usersdb
 app.secret_key='Default secret'
 
+@login_required
 def generate_token(uid,expiration=600):
     s=Serializer(app.secret_key,expires_in=expiration)
     token=s.dumps({'id':uid})
     return {'token':token,'duration':expiration}
-
-def verify_token(token):
-    s= Serializer(app.secret_key)
-    try:
-        data= s.loads(token)
-    except SignatureExpired:
-        return None
-    except BadSignature:
-        return None
-    return "Success"
 
 def hash_password(password):
     return pwd_context.encrypt(password)
@@ -84,14 +75,16 @@ def load_user(user_id):
         return User(user)
 
 @app.route('/')
+@app.route('/main')
+def main():
+    return flask.render_template('main.html')
+
+
 @app.route('/index')
-@login_required
+#@login_required
 def index():
     return flask.render_template('index.html')
 
-@app.route('/main')
-def index():
-    return flask.render_template('main.html')
 
 @app.route('/register',methods=['GET','POST'])
 def register():
@@ -133,30 +126,23 @@ def login():
             token=generate_token(uid)
             t=token['token'].decode('utf-8')
             session['token']=t
-            django.contrib.auth.login(request,user)
-            #user={'id':uid,'username':username,'password':hashp,'remember':remember}
-            #return flask.render_template('login_suc.html',data=user)
-            next=request.args.get('next')
-            if not is_safe_url(next):
-                message="Next doesn't safe"
-                return flask.render_template('400_l.html',message=message),400
-            return redirect(next or url_for('index'))
+            user={'id':uid,'username':username,'password':hashp,'remember':remember}
+            return flask.render_template('login_suc.html',data=user)
+            #next=request.args.get('next')
+            #if not is_safe_url(next):
+            #    message="Next doesn't safe"
+            #    return flask.render_template('400_l.html',message=message),400
+            #return redirect(next or url_for('index'))
     return flask.render_template('login.html',form=form)
 
 @app.route('/logout')
-@login_required
+#@login_required
 def logout():
     logout_user()
     return flask.render_template('logout_suc.html')
 
 @app.route('/listAJ',methods=['POST'])
 def listAJ():
-    #if test!=None:
-    #    return str(test['id'])
-    #else:
-    #    return 'Fail!'
-    uid=current_user.id
-    return uid
     top=request.form['top']#get top from input
     if top==None or top.isdigit()==False:
     #doesn't find top, or top invalid, just display all
