@@ -1,5 +1,5 @@
 import flask
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template, request, session, flash, redirect, url_for
 import requests
 import os
 import logging
@@ -21,11 +21,15 @@ ADDR= os.environ['BACKEND_ADDR']#respti
 PORT= os.environ['BACKEND_PORT']#port
 app = Flask(__name__)
 login_manager= LoginManager()
-login_manager.init_app(app)
+login_manager.session_protection="strong"
 login_manager.login_view="login"
+login_manager.login_message=u"Please log in to access this page"
+login_manager.init_app(app)
+
 client= MongoClient('mongodb://'+os.environ['MONGODB_HOSTNAME'],27017)
 users=client.usersdb
 app.secret_key='Default secret'
+
 
 @login_required
 def generate_token(uid,expiration=600):
@@ -63,28 +67,23 @@ class LoginForm(Form):
     remember= BooleanField('Remember me')
 
 class User(UserMixin):
-    def __init__(self, uid):
+    def __init__(self, uid,name):
+
         self.id = uid
+        self.name=name
 
 @login_manager.user_loader
 def load_user(user_id):
-    user=users.usersdb.find_one(user_id)
-    if user=='' or user==None:
+    if session['username']==None:
         return None
     else:
-        return User(user)
+        return User(int(user_id),session['username'])
 
 @app.route('/')
-@app.route('/main')
-def main():
-    return flask.render_template('main.html')
-
-
 @app.route('/index')
-#@login_required
+@login_required
 def index():
     return flask.render_template('index.html')
-
 
 @app.route('/register',methods=['GET','POST'])
 def register():
@@ -100,7 +99,6 @@ def register():
         hashp=hash_password(password)
         user={'id':uid,'username':username,'password':hashp}
         users.usersdb.insert_one(user)
-        session['token']=None
         return flask.render_template('register_suc.html',data=user),201
     return flask.render_template('register.html',form=form)
 
@@ -120,24 +118,25 @@ def login():
             message="Password wrong"
             return flask.render_template('400_l.html',message=message),400
         uid=udata['id']
-        class_u=User(uid)
+        class_u=User(uid,username)
         if login_user(class_u,remember):
-            session['id']=current_user.id
             token=generate_token(uid)
             t=token['token'].decode('utf-8')
             session['token']=t
-            user={'id':uid,'username':username,'password':hashp,'remember':remember}
-            return flask.render_template('login_suc.html',data=user)
-            #next=request.args.get('next')
-            #if not is_safe_url(next):
-            #    message="Next doesn't safe"
-            #    return flask.render_template('400_l.html',message=message),400
-            #return redirect(next or url_for('index'))
+            session['id']=uid
+            session['username']=username
+            #user={'id':uid,'username':username,'password':hashp,'remember':remember}
+            next=request.args.get('next')
+            if not is_safe_url(next):
+                message="Next doesn't safe"
+                return flask.render_template('400_l.html',message=message),400
+            #return flask.render_template('login_suc.html',data=user),201
+            return redirect(next or url_for('index'))
     return flask.render_template('login.html',form=form)
 
 @app.route('/logout')
-#@login_required
 def logout():
+    session['token']=None
     logout_user()
     return flask.render_template('logout_suc.html')
 
@@ -146,10 +145,10 @@ def listAJ():
     top=request.form['top']#get top from input
     if top==None or top.isdigit()==False:
     #doesn't find top, or top invalid, just display all
-        r = requests.get('http://{}:{}/listAll/json'.format(ADDR,PORT))
+        r = requests.get('http://{}:{}/listAll/json'.format(ADDR,PORT),headers={'Authorization':'Bearer'+session['token']})
     else:
     #else have top, add top in the link used in requests.get
-        r = requests.get('http://{}:{}/listAll/json?top={}'.format(ADDR,PORT,top))
+        r = requests.get('http://{}:{}/listAll/json?top={}'.format(ADDR,PORT,top),headers={'Authorization':'Bearer'+session['token']} )
     app.logger.debug(r.content)
     result="ACP Brevet Times (json):\n"
     c_c=0#count comma number
@@ -174,9 +173,9 @@ def listOJ():
     #almost same with listAJ, but doesn't shows close
     top=request.form['top']
     if top==None or top.isdigit()==False:
-        r = requests.get('http://{}:{}/listOpenOnly/json'.format(ADDR,PORT))
+        r = requests.get('http://{}:{}/listOpenOnly/json'.format(ADDR,PORT),headers={'Authorization':'Bearer'+session['token']} )
     else:
-        r = requests.get('http://{}:{}/listOpenOnly/json?top={}'.format(ADDR,PORT,top))
+        r = requests.get('http://{}:{}/listOpenOnly/json?top={}'.format(ADDR,PORT,top),headers={'Authorization':'Bearer'+session['token']} )
     app.logger.debug(r.content)
     result="ACP Brevet Open Times (json):\n"
     c_c=0
@@ -197,9 +196,9 @@ def listCJ():
     #almost same with listAJ, but doesn't shows open
     top=request.form['top']
     if top==None or top.isdigit()==False:
-        r = requests.get('http://{}:{}/listCloseOnly/json'.format(ADDR,PORT))
+        r = requests.get('http://{}:{}/listCloseOnly/json'.format(ADDR,PORT),headers={'Authorization':'Bearer'+session['token']} )
     else:
-        r = requests.get('http://{}:{}/listCloseOnly/json?top={}'.format(ADDR,PORT,top))
+        r = requests.get('http://{}:{}/listCloseOnly/json?top={}'.format(ADDR,PORT,top),headers={'Authorization':'Bearer'+session['token']})
     app.logger.debug(r.content)
     result="ACP Brevet Close Times (json):\n"
     c_c=0
@@ -220,9 +219,9 @@ def listAC():
     #almost same with listAJ, but call /csv, and a little different in achieve csv format
     top=request.form['top']
     if top==None or top.isdigit()==False:
-        r = requests.get('http://{}:{}/listAll/csv'.format(ADDR,PORT))
+        r = requests.get('http://{}:{}/listAll/csv'.format(ADDR,PORT),headers={'Authorization':'Bearer'+session['token']} )
     else:
-        r = requests.get('http://{}:{}/listAll/csv?top={}'.format(ADDR,PORT,top))
+        r = requests.get('http://{}:{}/listAll/csv?top={}'.format(ADDR,PORT,top),headers={'Authorization':'Bearer'+session['token']} )
     result="ACP Brevet Times (csv):\n"
     counter=0#count comma #
     for i in r.text:
@@ -244,9 +243,9 @@ def listOC():
     #almost same with listAC, but doesn't shows close time 
     top=request.form['top']
     if top==None or top.isdigit()==False:
-        r = requests.get('http://{}:{}/listOpenOnly/csv'.format(ADDR,PORT))
+        r = requests.get('http://{}:{}/listOpenOnly/csv'.format(ADDR,PORT),headers={'Authorization':'Bearer'+session['token']} )
     else:
-        r = requests.get('http://{}:{}/listOpenOnly/csv?top={}'.format(ADDR,PORT,top))
+        r = requests.get('http://{}:{}/listOpenOnly/csv?top={}'.format(ADDR,PORT,top),headers={'Authorization':'Bearer'+session['token']})
     result="ACP Brevet Open Times (csv):\n"
     counter=0
     for i in r.text:
@@ -266,9 +265,9 @@ def listCC():
     #almost same with listAC, but doesn't shows close time 
     top=request.form['top']
     if top==None or top.isdigit()==False:
-        r = requests.get('http://{}:{}/listCloseOnly/csv'.format(ADDR,PORT))
+        r = requests.get('http://{}:{}/listCloseOnly/csv'.format(ADDR,PORT),headers={'Authorization':'Bearer'+session['token']} )
     else:
-        r = requests.get('http://{}:{}/listCloseOnly/csv?top={}'.format(ADDR,PORT,top))
+        r = requests.get('http://{}:{}/listCloseOnly/csv?top={}'.format(ADDR,PORT,top),headers={'Authorization':'Bearer'+session['token']} )
     result="ACP Brevet Close Times (csv):\n"
     counter=0
     for i in r.text:

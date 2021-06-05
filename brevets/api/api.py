@@ -26,13 +26,14 @@ def verify_token(token):
 
 class listAJ(Resource):
     def get(self):
-        #token=session['token']
-        #if token==None:
-        #    message="Token doesn't exist."
-        #    return message,401
-        #if verify_token(token)==None:
-        #    message="Token verify fail."
-        #    return message,401
+        headers=flask.request.headers
+        if not headers.has_key('Authorization'):
+            message="Token doesn't exist."
+            return message,401
+        token= headers['Authorization'][6:]
+        if verify_token(token)==None:
+            message="Token verify fail."
+            return message,401
         top=request.args.get("top")#get top variable(get fail will became None)
         result=[]
         items=list(db.tododb.find())#take data in mongo to be list
@@ -51,13 +52,15 @@ class listAJ(Resource):
 class listOJ(Resource):
     #almost same with listAJ, but don't shows close times
     def get(self):
-        #token=session['token']
-        #if token==None:
-        #    message="Token doesn't exist."
-        #    return message,401
-        #if verify_token(token)==None:
-        #    message="Token verify fail."
-        #    return message,401        
+        headers=flask.request.headers
+        if not headers.has_key('Authorization'):
+            message="Token doesn't exist."
+            return message,401
+        token= headers['Authorization'][6:]
+        if verify_token(token)==None:
+
+            message="Token verify fail."
+            return message,401
         top=request.args.get("top")
         result=[]
         items=list(db.tododb.find())
@@ -73,13 +76,14 @@ class listOJ(Resource):
 class listCJ(Resource):
     #almost same with listAJ, but doesn't shows open times
     def get(self):
-        #token=session['token']
-        #if token==None:
-        #    message="Token doesn't exist."
-        #    return message,401
-        #if verify_token(token)==None:
-        #    message="Token verify fail."
-        #    return message,401
+        headers=flask.request.headers
+        if not headers.has_key('Authorization'):
+            message="Token doesn't exist."
+            return message,401
+        token= headers['Authorization'][6:]
+        if verify_token(token)==None:
+            message="Token verify fail."
+            return message,401
         top=request.args.get("top")
         result=[]
         items=list(db.tododb.find())
@@ -95,13 +99,14 @@ class listCJ(Resource):
 class listAC(Resource):
     def get(self):
         #except change format to be csv, others almost same with listAJ
-        #token=session['token']
-        #if token==None:
-        #    message="Token doesn't exist."
-        #    return message,401
-        #if verify_token(token)==None:
-        #    message="Token verify fail."
-        #    return message,401
+        headers=flask.request.headers
+        if not headers.has_key('Authorization'):
+            message="Token doesn't exist."
+            return message,401
+        token= headers['Authorization'][6:]
+        if verify_token(token)==None:
+            message="Token verify fail."
+            return message,401
         top=request.args.get("top")
         result=[]
         items=list(db.tododb.find())
@@ -121,10 +126,11 @@ class listAC(Resource):
 class listOC(Resource):
     #almost same with listAC, but doesn't shows close times
     def get(self):
-        token=session['token']
-        if token==None:
+        headers=flask.request.headers
+        if not headers.has_key('Authorization'):
             message="Token doesn't exist."
             return message,401
+        token= headers['Authorization'][6:]
         if verify_token(token)==None:
             message="Token verify fail."
             return message,401
@@ -144,14 +150,14 @@ class listOC(Resource):
                 result.append(values)
             return result
 
-
 class listCC(Resource):
     #almost same with listAC, but doesn't shows open times
     def get(self):
-        token=session['token']
-        if token==None:
+        headers=flask.request.headers
+        if not headers.has_key('Authorization'):
             message="Token doesn't exist."
             return message,401
+        token= headers['Authorization'][6:]
         if verify_token(token)==None:
             message="Token verify fail."
             return message,401
