@@ -53,19 +53,19 @@ def is_safe_url(target):
 class RegisterForm(Form):
 #form for register
     username= StringField('Username',[
-        validators.Length(min=2,max=25,message=u"Little too short for a username."),
+        validators.Length(min=2,max=25,message=u"Little too short or long for a username.(2 <= username length <= 25)"),
         validators.InputRequired(u"Must input username")])
     password= StringField('Password',[
-        validators.Length(min=2,max=25,message=u"Little too short for a password."),
+        validators.Length(min=2,max=25,message=u"Little too short or long for a password.(2 <= password length <= 25)"),
         validators.InputRequired(u"Must input password")])
 
 class LoginForm(Form):
 #form for login
     username= StringField('Username',[
-        validators.Length(min=2,max=25,message=u"Little too short for a username."),
+        validators.Length(min=2,max=25,message=u"Little too short or long for a username.(2 <= username length <= 25)"),
         validators.InputRequired(u"Must input username")])
     password= StringField('Password',[
-        validators.Length(min=2,max=25,message=u"Little too short for a password."),
+        validators.Length(min=2,max=25,message=u"Little too short or long for a password.(2 <= password length <= 25)" ),
         validators.InputRequired(u"Must input password")])
     remember= BooleanField('Remember me')
 

@@ -9,9 +9,25 @@
       {{form.csrf_token}}
       {{form.hidden_tag()}}
       <div>{{form.username.label}}
-	   {{form.username()}}</div>
+	   {{form.username()}}
+	   {% if form.username.errors %}
+	   <ul class="errors">
+		   {% for error in form.username.errors %}
+		   <li>{{error}}</li>
+		   {%endfor%}
+           </ul>
+	   {%endif%}
+      </div>
       <div>{{form.password.label}}
-	   {{form.password()}}</div>
+	   {{form.password()}}
+           {% if form.password.errors %}
+           <ul class="errors">
+                   {% for error in form.password.errors %}
+                   <li>{{error}}</li>
+                   {%endfor%}
+           </ul>
+           {%endif%}
+      </div>
       <div>{{form.remember.label}}
 	   {{form.remember()}}</div>
       <div><input type="submit" value="Login"></div>
