@@ -1,55 +1,62 @@
 # UOCIS322 - Project 7 #
 Adding authentication and user interface to brevet time calculator service
 
-## What is in this repository
+## Recall Project 4
 
-You have a minimal implementation of password- and token-based authentication modules in `DockerAuth` directory, and login forms in `DockerLogin`, using which you can create authenticated REST API-based services (as demonstrated in class), as well as a front end. 
+### Overview
 
-## IMPORTANT NOTES
+Reimplement the RUSA ACP controle time calculator with Flask and AJAX.
 
-**MAKE SURE TO USE THE SOLUTION `acp_times.py` from Canvas for this project!**
+### ACP controle times
 
-**MAKE SURE TO KEEP YOUR FILES in `brevets`! REMOVE `DockerRestAPI` after you're done!**
+Controls are points where a rider must obtain proof of passage, and control[e] times are the minimum and maximum times by which the rider must arrive at the location. In other words, essentially replacing the calculator here [https://rusa.org/octime_acp.html](https://rusa.org/octime_acp.html).   
 
-## Getting started 
+## Recall Project 5
 
-You will reuse *your* code from Project 6.
+### Overview
 
-Recall: you created the following three parts: 
+Store control times from Project 4 in a MongoDB database.
 
-* You designed RESTful services to expose what is stored in MongoDB, and created the following:
+### Difference with project 4
 
-** "http://<host:port>/listAll" should return all open and close times in the database
+1. Add two buttons `Submit` and `Display` in the ACP calculator page.
 
-** "http://<host:port>/listOpenOnly" should return open times only
+2. Upon clicking the `Submit` button, the control times should be inserted into a MongoDB database.
 
-** "http://<host:port>/listCloseOnly" should return close times only
+3. Upon clicking the `Display` button, the entries from the database should be displayed in a new page.
 
-* You also designed two different representations: one in csv and one in json. For the above, JSON should be your default representation. 
+4. Will shows error if inputed control distance is wrong or empty, detailed error response rule reference [https://rusa.org/octime_acp.html](https://rusa.org/octime_acp.html).
 
-** "http://<host:port>/listAll/csv" should return all open and close times in CSV format
+## Recall project 6
 
-** "http://<host:port>/listOpenOnly/csv" should return open times only in CSV format
+Project 6 has following four functionality. 
 
-** "http://<host:port>/listCloseOnly/csv" should return close times only in CSV format
+* 1.
+    * "http://<host:port>/listAll" should return all open and close times in the database
+    * "http://<host:port>/listOpenOnly" should return open times only
+    * "http://<host:port>/listCloseOnly" should return close times only
 
-** "http://<host:port>/listAll/json" should return all open and close times in JSON format
+* 2.
+    * "http://<host:port>/listAll/csv" should return all open and close times in CSV format
+    * "http://<host:port>/listOpenOnly/csv" should return open times only in CSV format
+    * "http://<host:port>/listCloseOnly/csv" should return close times only in CSV format
 
-** "http://<host:port>/listOpenOnly/json" should return open times only in JSON format
+    * "http://<host:port>/listAll/json" should return all open and close times in JSON format
+    * "http://<host:port>/listOpenOnly/json" should return open times only in JSON format
+    * "http://<host:port>/listCloseOnly/json" should return close times only in JSON format
 
-** "http://<host:port>/listCloseOnly/json" should return close times only in JSON format
+* 3.
+    * "http://<host:port>/listOpenOnly/csv?top=3" should return top 3 open times only (in ascending order) in CSV format 
+    * "http://<host:port>/listOpenOnly/json?top=5" should return top 5 open times only (in ascending order) in JSON format
+    * "http://<host:port>/listCloseOnly/csv?top=6" should return top 5 close times only (in ascending order) in CSV format
+    * "http://<host:port>/listCloseOnly/json?top=4" should return top 4 close times only (in ascending order) in JSON format
 
-* You also added a query parameter to get top "k" open and close times. For examples, see below.
+* 4.
+    * A consumer programs.
 
-** "http://<host:port>/listOpenOnly/csv?top=3" should return top 3 open times only (in ascending order) in CSV format 
+## Functionality of this project
 
-** "http://<host:port>/listOpenOnly/json?top=5" should return top 5 open times only (in ascending order) in JSON format
-
-* You'll also designed consumer programs (e.g., in jQuery) to expose the services.
-
-### Functionality you will add
-
-In this project, you will add the following functionalities:
+In this project, willing to add the following functionalities:
 
 #### Part 1: Authenticating the services 
 
@@ -69,32 +76,6 @@ Return a protected <resource>, which is basically what you created in project 6.
 
 The goal of this part of the project is to create frontend/UI for Brevet app using Flask-WTF and Flask-Login introduced in lectures. You frontend/UI should use the authentication that you created above. In addition to creating UI for basic authentication and token generation, you will add three additional functionalities in your UI: a) registration, b) login, c) remember me, d) logout.
 
-#### Summary
-You will still maintain your `brevetsapp` service, and `mongodb` service that you've had since project 5, that will remain UNCHANGED.
+## Identifying Information
 
-## Tasks
-
-You'll turn in your credentials.ini using which we will get the following:
-
-* The working application with two parts.
-
-* Dockerfile
-
-* docker-compose.yml
-
-## Grading Rubric
-
-* If your code works as expected: 100 points. This includes:
-    * Basic APIs work as expected in part 1.
-    * Decent user interface in part 2 including the three functionalities in the UI.
-
-* For each non-working API in part 1, 15 points will be docked off. Part 1 carries 45 points.
-
-* For the UI and the three functionalies, decent UI carries 15 points. Each functionality carries 10 points. In short, part 2 carries 45 points.
-
-* If none of them work, you'll get 10 points assuming
-    * `README` is updated with your name and email ID.
-    * `credentials.ini` is submitted with the correct URL of your repo.
-    * `docker-compose.yml` works/builds without any errors.
-
-* If the `docker-compose.yml` doesn't build or if `credentials.ini` is missing, 0 will be assigned.
+Author: Haoran Zhang, hzhang9@uoregon.edu
