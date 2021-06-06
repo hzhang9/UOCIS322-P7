@@ -58,7 +58,7 @@ Project 6 has following four functionality.
 
 In this project, willing to add the following functionalities:
 
-#### Part 1: Authenticating the services 
+### Part 1: Authenticating the services 
 
 - POST **/register**
 
@@ -72,9 +72,13 @@ Returns a token. This request must be authenticated using a HTTP Basic Authentic
 
 Return a protected <resource>, which is basically what you created in project 6. This request must be authenticated using token-based authentication only (see `DockerAuth/testToken.py`). HTTP password-based (basic) authentication is not allowed. On success a JSON object with data for the authenticated user is returned. On failure status code 401 (unauthorized) is returned.
 
-#### Part 2: User interface
+### Part 2: User interface
 
 The goal of this part of the project is to create frontend/UI for Brevet app using Flask-WTF and Flask-Login introduced in lectures. You frontend/UI should use the authentication that you created above. In addition to creating UI for basic authentication and token generation, you will add three additional functionalities in your UI: a) registration, b) login, c) remember me, d) logout.
+
+## How to use?
+
+Entry consumer programs, then register and log in by tips for using.
 
 ## Identifying Information
 
