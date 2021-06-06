@@ -13,9 +13,8 @@ from itsdangerous import (TimedJSONWebSignatureSerializer \
                           as Serializer, BadSignature, \
                           SignatureExpired)
 import time
-from urllib.parse import urlparse,urljoin
 import random
-
+from urllib.parse import urlparse,urljoin
 
 ADDR= os.environ['BACKEND_ADDR']#respti
 PORT= os.environ['BACKEND_PORT']#port
@@ -30,6 +29,7 @@ client= MongoClient('mongodb://'+os.environ['MONGODB_HOSTNAME'],27017)
 users=client.usersdb
 app.secret_key='Default secret'
 
+'''helper funciton'''
 
 @login_required
 def generate_token(uid,expiration=600):
@@ -48,7 +48,10 @@ def is_safe_url(target):
     test_url=urlparse(urljoin(request.host_url,target))
     return test_url.scheme in ('http','https') and ref_url.netloc == test_url.netloc
 
+'''-------------------------------------'''
+
 class RegisterForm(Form):
+#form for register
     username= StringField('Username',[
         validators.Length(min=2,max=25,message=u"Little too short for a username."),
         validators.InputRequired(u"Must input username")])
@@ -56,8 +59,8 @@ class RegisterForm(Form):
         validators.Length(min=2,max=25,message=u"Little too short for a password."),
         validators.InputRequired(u"Must input password")])
 
-
 class LoginForm(Form):
+#form for login
     username= StringField('Username',[
         validators.Length(min=2,max=25,message=u"Little too short for a username."),
         validators.InputRequired(u"Must input username")])
@@ -67,12 +70,13 @@ class LoginForm(Form):
     remember= BooleanField('Remember me')
 
 class User(UserMixin):
+#user class
     def __init__(self, uid,name):
-
         self.id = uid
         self.name=name
 
 @login_manager.user_loader
+#save login status
 def load_user(user_id):
     if session['username']==None:
         return None
@@ -87,65 +91,65 @@ def index():
 
 @app.route('/register',methods=['GET','POST'])
 def register():
-    form= RegisterForm()
+    form= RegisterForm()#get data from register form
     if form.validate_on_submit():
-        username=form.username.data
-        password=form.password.data
-        udata=users.usersdb.find_one({"username":username})
-        uid=random.randint(1,9999999)
-        if udata!=None:
+        username=form.username.data#get inputed user name
+        password=form.password.data#get inputed password
+        udata=users.usersdb.find_one({"username":username})#check does the username already exist in db
+        uid=random.randint(1,9999999)#randomly get a num as id(base must big for random)
+        if udata!=None:#if name already being register, raise mistake
             message="Already exist given username"
             return flask.render_template('400_r.html',message=message),400
-        hashp=hash_password(password)
-        user={'id':uid,'username':username,'password':hashp}
-        users.usersdb.insert_one(user)
-        return flask.render_template('register_suc.html',data=user),201
+        hashp=hash_password(password)#change password tobe hash
+        user={'id':uid,'username':username,'password':hashp}#put id, name and hash pwd into a dictt
+        users.usersdb.insert_one(user)#and insert into db
+        return flask.render_template('register_suc.html',data=user),201#show register success
     return flask.render_template('register.html',form=form)
 
 @app.route('/login',methods=['GET','POST'])
 def login():
-    form = LoginForm()
+    form = LoginForm()#get login data form input
     if form.validate_on_submit():
-        username=form.username.data
-        password= form.password.data
-        remember=form.remember.data
-        udata=users.usersdb.find_one({"username":username})
-        if udata==None:
+        username=form.username.data#get inputed name
+        password= form.password.data#get inputed password
+        remember=form.remember.data#get if remember from clickbox
+        udata=users.usersdb.find_one({"username":username})#find does the account in db(being registered before)
+        if udata==None:#if input username not yet being registered, raise error
             message="Username doesn't exist"
             return flask.render_template('400_l.html',message=message),400
-        hashp=udata['password']
-        if verify_password(password,hashp)==False:
+        hashp=udata['password']#get hash password that saved for this username in register
+        if verify_password(password,hashp)==False:#verify it, if false, raise error
             message="Password wrong"
             return flask.render_template('400_l.html',message=message),400
         uid=udata['id']
-        class_u=User(uid,username)
-        if login_user(class_u,remember):
-            token=generate_token(uid)
-            t=token['token'].decode('utf-8')
-            session['token']=t
-            session['id']=uid
-            session['username']=username
-            #user={'id':uid,'username':username,'password':hashp,'remember':remember}
-            next=request.args.get('next')
-            if not is_safe_url(next):
+        class_u=User(uid,username)#use User class to set user
+        if login_user(class_u,remember):#if login success
+            token=generate_token(uid)#get token dict
+            t=token['token'].decode('utf-8')#get token
+            session['token']=t#set token into session
+            session['id']=uid#and id
+            session['username']=username#and user name
+            next=request.args.get('next')#get next
+            if not is_safe_url(next):#and check whether it is safe, un-safe will raise error
                 message="Next doesn't safe"
                 return flask.render_template('400_l.html',message=message),400
-            #return flask.render_template('login_suc.html',data=user),201
-            return redirect(next or url_for('index'))
+            return redirect(next or url_for('index'))#because login successfully, now can see index(used login_required)
     return flask.render_template('login.html',form=form)
 
 @app.route('/logout')
 def logout():
-    session['token']=None
-    logout_user()
+    session['token']=None #delete token
+    logout_user() #logout
     return flask.render_template('logout_suc.html')
+
+'''----------------------------------------------'''
 
 @app.route('/listAJ',methods=['POST'])
 def listAJ():
     top=request.form['top']#get top from input
     if top==None or top.isdigit()==False:
     #doesn't find top, or top invalid, just display all
-        r = requests.get('http://{}:{}/listAll/json'.format(ADDR,PORT),headers={'Authorization':'Bearer'+session['token']})
+        r = requests.get('http://{}:{}/listAll/json'.format(ADDR,PORT),headers={'Authorization':'Bearer'+session['token']})#use headers to transfer token to api, following all listOJ, listCJ... use same method
     else:
     #else have top, add top in the link used in requests.get
         r = requests.get('http://{}:{}/listAll/json?top={}'.format(ADDR,PORT,top),headers={'Authorization':'Bearer'+session['token']} )

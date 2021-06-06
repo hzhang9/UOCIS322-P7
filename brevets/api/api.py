@@ -15,6 +15,7 @@ db=client.tododb
 app.secret_key='Default secret'
 
 def verify_token(token):
+#used to verify token that transfered from website
     s=Serializer(app.secret_key)
     try:
         data=s.loads(token)
@@ -26,14 +27,15 @@ def verify_token(token):
 
 class listAJ(Resource):
     def get(self):
-        headers=flask.request.headers
-        if not headers.has_key('Authorization'):
+        headers=flask.request.headers#get headers
+        if not headers.has_key('Authorization'):#if called by website, must have a key Authorization, if have not, means have not token also
             message="Token doesn't exist."
             return message,401
-        token= headers['Authorization'][6:]
-        if verify_token(token)==None:
+        token= headers['Authorization'][6:]#first 6 letter is Bearer, rest is token
+        if verify_token(token)==None:#verify the token, if fail, raise error
             message="Token verify fail."
             return message,401
+        #if pass above two check, token verify successfully, now can use function, and following all class use same method the check token
         top=request.args.get("top")#get top variable(get fail will became None)
         result=[]
         items=list(db.tododb.find())#take data in mongo to be list
